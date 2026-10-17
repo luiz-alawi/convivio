@@ -1,0 +1,25 @@
+{
+  "name": "@convivio/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@convivio/shared": "*",
+    "@fastify/cors": "^11.3.1",
+    "@fastify/jwt": "^10.2.4",
+    "bcryptjs": "^3.0.3",
+    "fastify": "^5.12.7",
+    "mongoose": "^9.11.2",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "~6.0.3"
+  }
+}

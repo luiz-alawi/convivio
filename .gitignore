@@ -1,0 +1,42 @@
+# dependências
+node_modules/
+
+# variáveis de ambiente (cada um tem o seu; só os exemplos vão pro git)
+.env
+.env.*
+!.env.example
+
+# build
+dist/
+*.tsbuildinfo
+
+# Expo
+.expo/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# pastas nativas geradas pelo Expo (CNG) — nunca editar à mão
+apps/mobile/ios/
+apps/mobile/android/
+.kotlin/
+*.orig.*
+
+# chaves e certificados de assinatura
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+
+# logs
+npm-debug.*
+*.log
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
