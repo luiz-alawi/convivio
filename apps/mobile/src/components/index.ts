@@ -6,6 +6,7 @@ export * from './Button';
 export * from './Card';
 export * from './Chips';
 export * from './IconButton';
+export * from './IntroSplash';
 export * from './PillarFlower';
 export * from './PillarHero';
 export * from './PillarRadar';

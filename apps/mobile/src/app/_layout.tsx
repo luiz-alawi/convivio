@@ -9,9 +9,10 @@ import {
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
-import { ErrorState, Loading } from '@/components';
+import { ErrorState, IntroSplash, Loading } from '@/components';
 import { useMe } from '@/hooks/queries';
 import { queryClient } from '@/lib/queryClient';
 import { colors } from '@/theme';
@@ -30,10 +31,26 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <StatusBar style="dark" />
-        <RootNavigator />
+        <View style={{ flex: 1 }}>
+          <RootNavigator />
+          <IntroGate />
+        </View>
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+// Abertura animada toda vez que o app abre com alguém logado.
+// Quem não está logado não vê: a tela de login já tem a própria animação.
+function IntroGate() {
+  const { status } = useAuth();
+  const [done, setDone] = useState(false);
+  const finish = useCallback(() => setDone(true), []);
+  useEffect(() => {
+    if (status === 'signedOut') setDone(true);
+  }, [status]);
+  if (done || status === 'signedOut') return null;
+  return <IntroSplash onDone={finish} />;
 }
 
 // Cada tipo de conta vê uma parte do app:

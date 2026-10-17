@@ -15,6 +15,25 @@ interface Props {
 
 const GAP = 10;
 
+/** Posição e tamanho de cada pétala da flor (mesma geometria do logo), para uma flor de `size` px. */
+export function petalGeometry(size: number) {
+  const center = size / 2;
+  const radius = size * 0.24;
+  const dist = size * 0.2;
+  return PILLARS.map((pillar, i) => {
+    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / PILLARS.length;
+    return {
+      pillar,
+      angle,
+      radius,
+      dx: dist * Math.cos(angle),
+      dy: dist * Math.sin(angle),
+      left: center + dist * Math.cos(angle) - radius,
+      top: center + dist * Math.sin(angle) - radius,
+    };
+  });
+}
+
 /**
  * Logo animado: as cinco pétalas chegam em espiral, se juntam na flor, a flor dá um pulso
  * e depois encolhe e vai para o lado do nome "convivio". Tocar repete a animação.
@@ -73,9 +92,7 @@ export function AnimatedBrand({ size = 150, finalSize = 52, onReveal }: Props) {
   const flowerX = -total / 2 + finalSize / 2;
   const textX = -total / 2 + finalSize + GAP + textWidth / 2;
 
-  const center = size / 2;
-  const petalR = size * 0.24;
-  const dist = size * 0.2;
+  const geometry = petalGeometry(size);
 
   return (
     <Pressable
@@ -98,8 +115,7 @@ export function AnimatedBrand({ size = 150, finalSize = 52, onReveal }: Props) {
               ],
             }}
           >
-            {PILLARS.map((pillar, i) => {
-              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / PILLARS.length;
+            {geometry.map(({ pillar, angle, radius, left, top }, i) => {
               // Ponto de partida: longe, girado 50° (dá o efeito de espiral)
               const from = angle + 0.9;
               const far = size * 1.7 + i * 12;
@@ -110,11 +126,11 @@ export function AnimatedBrand({ size = 150, finalSize = 52, onReveal }: Props) {
                   style={[
                     styles.petal,
                     {
-                      width: petalR * 2,
-                      height: petalR * 2,
-                      borderRadius: petalR,
-                      left: center + dist * Math.cos(angle) - petalR,
-                      top: center + dist * Math.sin(angle) - petalR,
+                      width: radius * 2,
+                      height: radius * 2,
+                      borderRadius: radius,
+                      left,
+                      top,
                       backgroundColor: pillarTheme[pillar.id].color,
                       opacity: p.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 0.85, 0.85] }),
                       transform: [
