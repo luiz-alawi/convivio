@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { PLACE_CATEGORIES, type Place, type PlaceCategory } from '@convivio/shared';
 import * as Haptics from 'expo-haptics';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Badge, Button, Card, Empty, ErrorState, Loading, Segmented } from '@/components';
 import { usePlaces, usePointsAction } from '@/hooks/queries';
 import { categoryLabels } from '@/lib/labels';
+import { flyTo } from '@/lib/map';
 import { categoryTheme, colors, font, fonts, radius, shadow, spacing, type IconName } from '@/theme';
 
 // Centro aproximado do Recanto Maestro / Quarta Colônia
@@ -22,6 +23,7 @@ export default function ExploreScreen() {
   const [view, setView] = useState<'lista' | 'mapa'>('lista');
   const places = usePlaces(category);
   const visit = usePointsAction();
+  const mapRef = useRef<MapView>(null);
 
   function markVisited(place: Place) {
     visit.mutate(`/places/${place.id}/visit`, {
@@ -57,7 +59,7 @@ export default function ExploreScreen() {
         <ErrorState error={places.error} onRetry={places.refetch} />
       ) : view === 'mapa' ? (
         <View style={styles.mapWrap}>
-          <MapView style={StyleSheet.absoluteFill} initialRegion={REGION}>
+          <MapView ref={mapRef} style={StyleSheet.absoluteFill} initialRegion={REGION} mapType="satellite">
             {places.data?.map((place) => (
               <Marker
                 key={place.id}
@@ -65,6 +67,7 @@ export default function ExploreScreen() {
                 title={place.name}
                 description={categoryLabels[place.category]}
                 pinColor={categoryTheme[place.category].color}
+                onPress={() => flyTo(mapRef, place.location, { zoom: 17, altitude: 800 })}
               />
             ))}
           </MapView>

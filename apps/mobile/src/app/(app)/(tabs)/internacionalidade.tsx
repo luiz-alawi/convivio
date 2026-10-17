@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Badge, Card, ErrorState, IconButton, Loading } from '@/components';
 import { useTrip, useTrips } from '@/hooks/queries';
+import { flyOut, flyTo } from '@/lib/map';
 import { colors, font, fonts, pillarTheme, radius, shadow, spacing } from '@/theme';
 
-// Mapa-múndi das viagens (estilo Snapchat / Fotos do iPhone). Tocar num ponto abre os detalhes.
+// Mapa-múndi das viagens (estilo Snapchat / Fotos do iPhone). Tocar num ponto aproxima a câmera e abre os detalhes.
 const WORLD = { latitude: 10, longitude: -20, latitudeDelta: 120, longitudeDelta: 160 };
 const theme = pillarTheme.internacionalidade;
 const AMF_COLOR = colors.primary;
@@ -15,13 +16,20 @@ export default function InternationalityScreen() {
   const trips = useTrips();
   const [selectedId, setSelectedId] = useState<string>();
   const trip = useTrip(selectedId); // abrir uma viagem dá pontos em Internacionalidade
+  const mapRef = useRef<MapView>(null);
+
+  function close() {
+    if (!selectedId) return;
+    setSelectedId(undefined);
+    flyOut(mapRef, WORLD);
+  }
 
   if (trips.isLoading) return <Loading />;
   if (trips.error) return <ErrorState error={trips.error} onRetry={trips.refetch} />;
 
   return (
     <View style={styles.container}>
-      <MapView style={StyleSheet.absoluteFill} initialRegion={WORLD} onPress={() => setSelectedId(undefined)}>
+      <MapView ref={mapRef} style={StyleSheet.absoluteFill} initialRegion={WORLD} mapType="satellite" onPress={close}>
         {trips.data?.map((t) => (
           <Marker
             key={t.id}
@@ -30,6 +38,7 @@ export default function InternationalityScreen() {
             onPress={(e) => {
               e.stopPropagation();
               setSelectedId(t.id);
+              flyTo(mapRef, t.location, { zoom: 13, altitude: 6000 });
             }}
           />
         ))}
@@ -67,7 +76,7 @@ export default function InternationalityScreen() {
                     label="Fechar"
                     size={32}
                     background={colors.surfaceAlt}
-                    onPress={() => setSelectedId(undefined)}
+                    onPress={close}
                   />
                 </View>
                 <Text style={font.title}>{trip.data.title}</Text>
