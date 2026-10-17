@@ -12,7 +12,7 @@ import { colors, fonts, radius, shadow, spacing } from '@/theme';
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const insets = useSafeAreaInsets();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ export default function LoginScreen() {
   });
 
   async function handleSubmit() {
-    const parsed = loginSchema.safeParse({ email, password });
+    const parsed = loginSchema.safeParse({ identifier, password });
     if (!parsed.success) return setError(parsed.error.issues[0]?.message);
     setError(undefined);
     setLoading(true);
@@ -58,12 +58,14 @@ export default function LoginScreen() {
         <Animated.View style={[styles.form, fadeUp(40)]}>
           <Text style={styles.title}>Entrar</Text>
           <TextField
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
+            label="E-mail ou nome de usuário"
+            placeholder="voce@email.com ou @usuario"
+            value={identifier}
+            onChangeText={setIdentifier}
             autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
+            autoCorrect={false}
+            autoComplete="username"
+            textContentType="username"
           />
           <TextField label="Senha" value={password} onChangeText={setPassword} secureTextEntry autoComplete="password" />
           {!!error && (

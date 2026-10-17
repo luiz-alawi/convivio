@@ -45,8 +45,14 @@ export const registerCompanySchema = z.object({
 });
 export type RegisterCompanyInput = z.infer<typeof registerCompanySchema>;
 
+// Entra com e-mail ou nome de usuário ("@demo" também vale)
 export const loginSchema = z.object({
-  email: z.email('E-mail inválido').trim().toLowerCase(),
+  identifier: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .transform((v) => v.replace(/^@/, ''))
+    .pipe(z.string().min(1, 'Informe seu e-mail ou nome de usuário')),
   password: z.string().min(1, 'Informe a senha'),
 });
 export type LoginInput = z.infer<typeof loginSchema>;

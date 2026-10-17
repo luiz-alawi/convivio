@@ -56,10 +56,12 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post('/login', async (request) => {
-    const { email, password } = parse(loginSchema, request.body);
-    const user = await User.findOne({ email }).select('+passwordHash').lean();
+    const { identifier, password } = parse(loginSchema, request.body);
+    // Nome de usuário não pode ter "@", então se tiver é e-mail
+    const filter = identifier.includes('@') ? { email: identifier } : { username: identifier };
+    const user = await User.findOne(filter).select('+passwordHash').lean();
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      throw new HttpError(401, 'E-mail ou senha incorretos');
+      throw new HttpError(401, 'Usuário ou senha incorretos');
     }
     if (user.blocked) throw new HttpError(403, 'Esta conta foi bloqueada. Fale com a administração.');
     return respond(user);
