@@ -75,7 +75,7 @@ export async function authRoutes(app: FastifyInstance) {
     const { course, ...data } = parse(updateProfileSchema, request.body);
     await assertAvailable({ username: data.username }, request.account!.id);
     const update = course === null ? { ...data, $unset: { course: 1 } } : { ...data, course };
-    const user = await User.findByIdAndUpdate(request.account!.id, update, { new: true }).lean();
+    const user = await User.findByIdAndUpdate(request.account!.id, update, { returnDocument: 'after' }).lean();
     if (!user) throw notFound('Usuário');
     return toMe(user);
   });
