@@ -1,4 +1,14 @@
-import { COURSES, PILLAR_IDS, USER_ROLES, type Me, type PublicUser } from '@convivio/shared';
+import {
+  ACCOUNT_ROLES,
+  COMPANY_STATUSES,
+  COURSES,
+  PILLAR_IDS,
+  USER_PROFILES,
+  type AdminUser,
+  type CompanyInfo,
+  type Me,
+  type PublicUser,
+} from '@convivio/shared';
 import { Schema, Types, model, type InferSchemaType } from 'mongoose';
 
 const pointsSchema = new Schema(
@@ -6,12 +16,26 @@ const pointsSchema = new Schema(
   { _id: false },
 );
 
+const companySchema = new Schema(
+  {
+    cnpj: { type: String, required: true },
+    description: String,
+    website: String,
+    city: String,
+    status: { type: String, enum: COMPANY_STATUSES, default: 'pendente' },
+  },
+  { _id: false },
+);
+
 const userSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
+    username: { type: String, lowercase: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
-    role: { type: String, enum: USER_ROLES, required: true },
+    role: { type: String, enum: ACCOUNT_ROLES, default: 'usuario' },
+    profile: { type: String, enum: USER_PROFILES }, // só para role "usuario"
+    company: companySchema, // só para role "empresa"
     course: { type: String, enum: COURSES },
     phone: String,
     bio: String,
@@ -21,22 +45,37 @@ const userSchema = new Schema(
     streak: { type: Number, default: 0 },
     lastCheckInAt: Date,
     following: [{ type: Types.ObjectId, ref: 'User' }],
+    blocked: { type: Boolean, default: false },
     acceptedTermsAt: { type: Date, required: true },
   },
   { timestamps: true },
 );
 
 userSchema.index({ following: 1 });
+userSchema.index({ username: 1 }, { unique: true, partialFilterExpression: { username: { $type: 'string' } } });
 
 export const User = model('User', userSchema);
-export type UserDoc = InferSchemaType<typeof userSchema> & { _id: Types.ObjectId };
+export type UserDoc = InferSchemaType<typeof userSchema> & { _id: Types.ObjectId; createdAt: Date };
+
+const toCompany = (user: UserDoc): CompanyInfo | undefined =>
+  user.company
+    ? {
+        cnpj: user.company.cnpj,
+        description: user.company.description ?? undefined,
+        website: user.company.website ?? undefined,
+        city: user.company.city ?? undefined,
+        status: user.company.status,
+      }
+    : undefined;
 
 export async function toPublicUser(user: UserDoc): Promise<PublicUser> {
   const followersCount = await User.countDocuments({ following: user._id });
   return {
     id: user._id.toString(),
     name: user.name,
+    username: user.username ?? undefined,
     role: user.role,
+    profile: user.profile ?? undefined,
     course: user.course ?? undefined,
     bio: user.bio ?? undefined,
     avatarUrl: user.avatarUrl ?? undefined,
@@ -61,5 +100,20 @@ export async function toMe(user: UserDoc): Promise<Me> {
     streak: user.streak,
     lastCheckInAt: user.lastCheckInAt?.toISOString(),
     following: user.following.map((id) => id.toString()),
+    company: toCompany(user),
   };
 }
+
+export const toAdminUser = (user: UserDoc): AdminUser => ({
+  id: user._id.toString(),
+  name: user.name,
+  username: user.username ?? undefined,
+  email: user.email,
+  phone: user.phone ?? undefined,
+  role: user.role,
+  profile: user.profile ?? undefined,
+  avatarUrl: user.avatarUrl ?? undefined,
+  blocked: user.blocked,
+  company: toCompany(user),
+  createdAt: user.createdAt.toISOString(),
+});

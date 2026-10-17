@@ -1,18 +1,32 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
-import { colors, radius, spacing } from '@/theme';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { colors, fonts, radius, spacing, type IconName } from '@/theme';
 
 interface Props {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'outline' | 'ghost';
+  /** primary = cheio; soft = fundo claro da cor; outline = só borda; ghost = só texto */
+  variant?: 'primary' | 'soft' | 'outline' | 'ghost';
   color?: string;
+  icon?: IconName;
+  size?: 'md' | 'sm';
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
 }
 
-export function Button({ title, onPress, variant = 'primary', color = colors.primary, loading, disabled, style }: Props) {
-  const filled = variant === 'primary';
+export function Button({
+  title,
+  onPress,
+  variant = 'primary',
+  color = colors.primary,
+  icon,
+  size = 'md',
+  loading,
+  disabled,
+  style,
+}: Props) {
+  const textColor = variant === 'primary' ? colors.primaryText : color;
   return (
     <Pressable
       accessibilityRole="button"
@@ -20,16 +34,22 @@ export function Button({ title, onPress, variant = 'primary', color = colors.pri
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
-        filled && { backgroundColor: color },
+        size === 'sm' && styles.sm,
+        variant === 'primary' && { backgroundColor: color },
+        variant === 'soft' && { backgroundColor: `${color}1A` },
         variant === 'outline' && { borderWidth: 1.5, borderColor: color },
-        (pressed || disabled) && { opacity: 0.6 },
+        pressed && { opacity: 0.75, transform: [{ scale: 0.98 }] },
+        disabled && { opacity: 0.45 },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={filled ? colors.primaryText : color} />
+        <ActivityIndicator color={textColor} />
       ) : (
-        <Text style={[styles.text, { color: filled ? colors.primaryText : color }]}>{title}</Text>
+        <View style={styles.content}>
+          {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 18} color={textColor} />}
+          <Text style={[styles.text, size === 'sm' && styles.textSm, { color: textColor }]}>{title}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -37,11 +57,14 @@ export function Button({ title, onPress, variant = 'primary', color = colors.pri
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
-    paddingHorizontal: spacing.lg,
+    minHeight: 52,
+    paddingHorizontal: spacing.xl,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: { fontSize: 16, fontWeight: '700' },
+  sm: { minHeight: 38, paddingHorizontal: spacing.lg, borderRadius: radius.pill },
+  content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  text: { fontFamily: fonts.bold, fontSize: 16 },
+  textSm: { fontSize: 14 },
 });

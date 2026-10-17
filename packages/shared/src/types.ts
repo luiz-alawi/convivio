@@ -1,5 +1,14 @@
 // Formatos que a API devolve em JSON (ids como string, datas em ISO).
-import type { Course, JobType, PlaceCategory, PostKind, UserRole } from './constants';
+import type {
+  AccountRole,
+  CompanyStatus,
+  Course,
+  JobType,
+  PlaceCategory,
+  PostKind,
+  UploadKind,
+  UserProfile,
+} from './constants';
 import type { PillarPoints } from './pillars';
 
 export interface GeoPoint {
@@ -7,10 +16,20 @@ export interface GeoPoint {
   longitude: number;
 }
 
+export interface CompanyInfo {
+  cnpj: string;
+  description?: string;
+  website?: string;
+  city?: string;
+  status: CompanyStatus;
+}
+
 export interface PublicUser {
   id: string;
   name: string;
-  role: UserRole;
+  username?: string;
+  role: AccountRole;
+  profile?: UserProfile;
   course?: Course;
   bio?: string;
   avatarUrl?: string;
@@ -26,6 +45,7 @@ export interface Me extends PublicUser {
   streak: number;
   lastCheckInAt?: string;
   following: string[];
+  company?: CompanyInfo;
 }
 
 export interface AuthResponse {
@@ -105,9 +125,11 @@ export interface Passage {
   };
 }
 
+export type PostAuthor = Pick<PublicUser, 'id' | 'name' | 'username' | 'avatarUrl'>;
+
 export interface Post {
   id: string;
-  author: Pick<PublicUser, 'id' | 'name' | 'avatarUrl'>;
+  author: PostAuthor;
   kind: PostKind;
   imageUrl: string;
   caption?: string;
@@ -121,4 +143,43 @@ export interface CheckInResult {
   alreadyCheckedIn: boolean;
   streak: number;
   pointsAwarded: number;
+}
+
+/** Parâmetros assinados para o app enviar a imagem direto ao Cloudinary. */
+export interface UploadSignature {
+  kind: UploadKind;
+  uploadUrl: string;
+  apiKey: string;
+  timestamp: number;
+  folder: string;
+  signature: string;
+}
+
+// --- administração ---
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  username?: string;
+  email: string;
+  phone?: string;
+  role: AccountRole;
+  profile?: UserProfile;
+  avatarUrl?: string;
+  blocked: boolean;
+  company?: CompanyInfo;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  users: number;
+  companies: number;
+  pendingCompanies: number;
+  jobs: number;
+  reportedPosts: number;
+}
+
+export interface ReportedPost extends Post {
+  hidden: boolean;
+  reports: { reason: string }[];
 }

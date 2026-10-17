@@ -16,8 +16,11 @@ import { VideoModel } from './modules/videos/video.model';
 const RECANTO_MAESTRO = { latitude: -29.6879, longitude: -53.3874 };
 const VALE_VENETO = { latitude: -29.6436, longitude: -53.4255 };
 
-// Vídeo público de teste (substituir pelas videoaulas dos professores)
-const SAMPLE_VIDEO = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+// Vídeos públicos de teste (substituir pelas videoaulas dos professores)
+const SAMPLE_VIDEOS = [
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // CC0
+  'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4', // CC-BY Blender Foundation
+];
 
 const places = [
   {
@@ -94,37 +97,34 @@ const trips = [
 ];
 
 const videos = [
-  { title: 'Videoaula de exemplo 1', course: 'Gastronomia', professor: 'Professor(a) [confirmar]', url: SAMPLE_VIDEO, durationSec: 15 },
-  { title: 'Videoaula de exemplo 2', course: 'Hotelaria', professor: 'Professor(a) [confirmar]', url: SAMPLE_VIDEO, durationSec: 15 },
-  { title: 'Videoaula de exemplo 3', course: 'Sistemas de Informação', professor: 'Professor(a) [confirmar]', url: SAMPLE_VIDEO, durationSec: 15 },
+  { title: 'Videoaula de exemplo 1', course: 'Gastronomia', professor: 'Professor(a) [confirmar]', url: SAMPLE_VIDEOS[0]!, durationSec: 6 },
+  { title: 'Videoaula de exemplo 2', course: 'Hotelaria', professor: 'Professor(a) [confirmar]', url: SAMPLE_VIDEOS[1]!, durationSec: 10 },
+  { title: 'Videoaula de exemplo 3', course: 'Sistemas de Informação', professor: 'Professor(a) [confirmar]', url: SAMPLE_VIDEOS[0]!, durationSec: 6 },
 ];
 
 const jobs = [
   {
     title: 'Recepcionista',
-    company: 'Hotel da região [confirmar]',
+    company: 'Hotel Demo [confirmar]',
     type: 'vaga',
     description: 'Vaga de exemplo — o hotel está sempre contratando. [confirmar detalhes]',
     contact: 'contato@exemplo.com',
     city: 'Recanto Maestro',
-    status: 'aprovada',
   },
   {
     title: 'Garçom/garçonete para eventos',
-    company: 'Restaurante parceiro [confirmar]',
+    company: 'Hotel Demo [confirmar]',
     type: 'freela',
     description: 'Freela de exemplo para fins de semana.',
     contact: 'contato@exemplo.com',
     city: 'Quarta Colônia',
-    status: 'aprovada',
   },
   {
     title: 'Fotógrafo(a) de eventos',
-    company: 'Empresa da região [confirmar]',
+    company: 'Hotel Demo [confirmar]',
     type: 'freela',
     description: 'Freela de exemplo para cobertura de eventos.',
     contact: 'contato@exemplo.com',
-    status: 'aprovada',
   },
 ];
 
@@ -140,11 +140,55 @@ const passages = [
   },
 ];
 
-// Usuário para a demo do pitch (senha só para ambiente de teste)
-const DEMO_USER = { name: 'Aluno Demo', email: 'demo@convivio.app', password: 'convivio-demo' };
+// Contas para a demo do pitch, uma de cada tipo (senhas só para ambiente de teste)
+const DEMO_ACCOUNTS = [
+  {
+    name: 'Aluno Demo',
+    username: 'demo',
+    email: 'demo@convivio.app',
+    password: 'convivio-demo',
+    role: 'usuario',
+    profile: 'aluno',
+    course: 'Sistemas de Informação',
+  },
+  {
+    name: 'Hotel Demo [confirmar]',
+    email: 'empresa@convivio.app',
+    password: 'convivio-empresa',
+    role: 'empresa',
+    company: { cnpj: '00000000000000', city: 'Recanto Maestro', status: 'aprovada' },
+  },
+  {
+    name: 'Administração Convivio',
+    username: 'admin',
+    email: 'admin@convivio.app',
+    password: 'convivio-admin',
+    role: 'admin',
+  },
+] as const;
+
+async function upsertAccount({ password, ...account }: (typeof DEMO_ACCOUNTS)[number]) {
+  await User.updateOne(
+    { email: account.email },
+    {
+      $set: account,
+      $setOnInsert: { passwordHash: await bcrypt.hash(password, 10), acceptedTermsAt: new Date() },
+    },
+    { upsert: true },
+  );
+  return User.findOne({ email: account.email }).lean();
+}
 
 async function main() {
   await connectDb();
+
+  // Migração: contas criadas antes dos papéis usavam "role" para o vínculo (aluno, visitante...)
+  const migrated = await User.updateMany(
+    { role: { $nin: ['usuario', 'empresa', 'admin'] } },
+    [{ $set: { profile: '$role', role: 'usuario' } }],
+    { updatePipeline: true },
+  );
+  await User.syncIndexes();
 
   await Promise.all([
     PlaceModel.deleteMany({}),
@@ -154,31 +198,19 @@ async function main() {
     PassageModel.deleteMany({}),
   ]);
 
+  const [, company] = await Promise.all(DEMO_ACCOUNTS.map(upsertAccount));
+
   await PlaceModel.insertMany(places);
   await TripModel.insertMany(trips);
   await VideoModel.insertMany(videos);
-  await JobModel.insertMany(jobs);
+  await JobModel.insertMany(jobs.map((job) => ({ ...job, createdBy: company?._id })));
   await PassageModel.insertMany(passages);
-
-  await User.updateOne(
-    { email: DEMO_USER.email },
-    {
-      $setOnInsert: {
-        name: DEMO_USER.name,
-        email: DEMO_USER.email,
-        passwordHash: await bcrypt.hash(DEMO_USER.password, 10),
-        role: 'aluno',
-        course: 'Sistemas de Informação',
-        acceptedTermsAt: new Date(),
-      },
-    },
-    { upsert: true },
-  );
 
   console.log(
     `Seed ok: ${places.length} lugares, ${trips.length} viagens, ${videos.length} vídeos, ${jobs.length} vagas, ${passages.length} passagens.`,
   );
-  console.log(`Usuário demo: ${DEMO_USER.email}`);
+  if (migrated.modifiedCount) console.log(`${migrated.modifiedCount} conta(s) antiga(s) migrada(s) para o papel "usuario".`);
+  console.log(`Contas demo: ${DEMO_ACCOUNTS.map((a) => `${a.email} (${a.role})`).join(', ')}`);
   await disconnectDb();
 }
 

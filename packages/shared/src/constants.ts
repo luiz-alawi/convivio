@@ -1,7 +1,16 @@
 import type { PillarId } from './pillars';
 
-export const USER_ROLES = ['aluno', 'futuro_aluno', 'visitante', 'professor', 'empresa'] as const;
-export type UserRole = (typeof USER_ROLES)[number];
+// Tipo de conta: define o que a pessoa pode fazer no app.
+export const ACCOUNT_ROLES = ['usuario', 'empresa', 'admin'] as const;
+export type AccountRole = (typeof ACCOUNT_ROLES)[number];
+
+// Para contas "usuario": qual o vínculo com a AMF.
+export const USER_PROFILES = ['aluno', 'futuro_aluno', 'visitante', 'professor'] as const;
+export type UserProfile = (typeof USER_PROFILES)[number];
+
+// Empresas só publicam vagas depois de aprovadas pelo admin (evita spam e golpes).
+export const COMPANY_STATUSES = ['pendente', 'aprovada', 'recusada'] as const;
+export type CompanyStatus = (typeof COMPANY_STATUSES)[number];
 
 export const COURSES = [
   'Direito',
@@ -22,6 +31,9 @@ export type JobType = (typeof JOB_TYPES)[number];
 
 export const POST_KINDS = ['momento', 'galeria'] as const; // momento = some em 24h (BeReal); galeria = fica no perfil
 export type PostKind = (typeof POST_KINDS)[number];
+
+export const UPLOAD_KINDS = ['avatar', 'post'] as const;
+export type UploadKind = (typeof UPLOAD_KINDS)[number];
 
 // Ações que geram pontos. Cada ação vale uma vez por item (ex.: assistir o mesmo vídeo de novo não pontua).
 // pillar 'all' = soma em todos os pilares.

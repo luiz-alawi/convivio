@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 import { env } from './env';
 import { registerErrorHandler } from './lib/http';
+import { adminRoutes } from './modules/admin/admin.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { checkinRoutes } from './modules/checkin/checkin.routes';
 import { jobsRoutes } from './modules/jobs/jobs.routes';
@@ -10,6 +11,7 @@ import { placesRoutes } from './modules/places/places.routes';
 import { postsRoutes } from './modules/posts/posts.routes';
 import { tripsRoutes } from './modules/trips/trips.routes';
 import { usersRoutes } from './modules/users/users.routes';
+import { uploadsRoutes } from './modules/uploads/uploads.routes';
 import { videosRoutes } from './modules/videos/videos.routes';
 import { registerAuth } from './plugins/auth';
 
@@ -31,6 +33,8 @@ export async function buildApp() {
   await app.register(jobsRoutes, { prefix: '/jobs' });
   await app.register(passagesRoutes, { prefix: '/passages' });
   await app.register(postsRoutes, { prefix: '/posts' });
+  await app.register(uploadsRoutes, { prefix: '/uploads' });
+  await app.register(adminRoutes, { prefix: '/admin' });
 
   return app;
 }

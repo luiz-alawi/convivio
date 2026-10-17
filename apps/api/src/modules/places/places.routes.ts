@@ -28,6 +28,6 @@ export async function placesRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/:id/visit', { onRequest: [app.authenticate] }, async (request) => {
     assertObjectId(request.params.id, 'Lugar');
     if (!(await PlaceModel.exists({ _id: request.params.id }))) throw notFound('Lugar');
-    return { pointsAwarded: await awardPoints(request.user.sub, 'visit_place', request.params.id) };
+    return { pointsAwarded: await awardPoints(request.account!.id, 'visit_place', request.params.id) };
   });
 }

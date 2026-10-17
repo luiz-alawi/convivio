@@ -13,7 +13,7 @@ export async function tripsRoutes(app: FastifyInstance) {
     assertObjectId(request.params.id, 'Viagem');
     const trip = await TripModel.findById(request.params.id).lean();
     if (!trip) throw notFound('Viagem');
-    if (request.user) await awardPoints(request.user.sub, 'view_trip', request.params.id);
+    if (request.account) await awardPoints(request.account.id, 'view_trip', request.params.id);
     return toTrip(trip);
   });
 }

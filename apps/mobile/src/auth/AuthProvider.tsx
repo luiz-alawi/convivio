@@ -1,4 +1,4 @@
-import type { AuthResponse, LoginInput, RegisterInput } from '@convivio/shared';
+import type { AuthResponse, LoginInput, RegisterCompanyInput, RegisterInput } from '@convivio/shared';
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, setAuthToken, setUnauthorizedHandler } from '@/lib/api';
@@ -12,6 +12,7 @@ interface AuthContextValue {
   status: Status;
   signIn: (input: LoginInput) => Promise<void>;
   signUp: (input: RegisterInput) => Promise<void>;
+  signUpCompany: (input: RegisterCompanyInput) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -54,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn: async (input) => startSession(await api<AuthResponse>('/auth/login', { method: 'POST', body: input })),
       signUp: async (input) =>
         startSession(await api<AuthResponse>('/auth/register', { method: 'POST', body: input })),
+      signUpCompany: async (input) =>
+        startSession(await api<AuthResponse>('/auth/register-company', { method: 'POST', body: input })),
       signOut,
     }),
     [status, startSession, signOut],

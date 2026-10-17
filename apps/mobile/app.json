@@ -24,7 +24,19 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-video"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-video",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Convivio usa suas fotos para a foto de perfil e para os posts de bons hábitos.",
+          "cameraPermission": "O Convivio usa a câmera para você registrar seus momentos."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }

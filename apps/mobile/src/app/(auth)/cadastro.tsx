@@ -1,18 +1,31 @@
-import { COURSES, registerSchema, type Course, type UserRole } from '@convivio/shared';
+import { COURSES, registerSchema, type Course, type UserProfile } from '@convivio/shared';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { Button, Chips, Screen, TextField } from '@/components';
-import { roleLabels, toOptions } from '@/lib/labels';
-import { colors, font, radius, spacing } from '@/theme';
+import { Button, Chips, TextField } from '@/components';
+import { TermsCheckbox } from '@/components/TermsCheckbox';
+import { profileLabels, toOptions } from '@/lib/labels';
+import { colors, fonts, spacing } from '@/theme';
 
-const roleOptions = toOptions(roleLabels);
+const profileOptions = toOptions(profileLabels);
 const courseOptions = COURSES.map((c) => ({ value: c, label: c }));
+
+// Sugere um @ a partir do nome: "Maria Silva" → "maria.silva"
+const suggestUsername = (name: string) =>
+  name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '.')
+    .replace(/[^a-z0-9._]/g, '')
+    .slice(0, 20);
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', bio: '' });
-  const [role, setRole] = useState<UserRole>();
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '', phone: '', bio: '' });
+  const [usernameTouched, setUsernameTouched] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>();
   const [course, setCourse] = useState<Course>();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -20,18 +33,23 @@ export default function RegisterScreen() {
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
-    onChangeText: (text: string) => setForm((f) => ({ ...f, [key]: text })),
+    onChangeText: (text: string) =>
+      setForm((f) => ({
+        ...f,
+        [key]: text,
+        ...(key === 'name' && !usernameTouched && { username: suggestUsername(text) }),
+      })),
     error: errors[key],
   });
 
-  const needsCourse = role === 'aluno' || role === 'professor';
+  const needsCourse = profile === 'aluno' || profile === 'professor';
 
   async function handleSubmit() {
     const parsed = registerSchema.safeParse({
       ...form,
       phone: form.phone || undefined,
       bio: form.bio || undefined,
-      role,
+      profile,
       course: needsCourse ? course : undefined,
       acceptedTerms,
     });
@@ -51,66 +69,50 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen edges={[]}>
-      <TextField label="Nome" autoComplete="name" {...field('name')} />
-      <TextField
-        label="E-mail"
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        {...field('email')}
-      />
-      <TextField label="Senha (mín. 8 caracteres)" secureTextEntry autoComplete="new-password" {...field('password')} />
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <TextField label="Nome" autoComplete="name" {...field('name')} />
+        <TextField
+          label="Nome de usuário"
+          prefix="@"
+          autoCapitalize="none"
+          autoCorrect={false}
+          onFocus={() => setUsernameTouched(true)}
+          {...field('username')}
+        />
+        <TextField label="E-mail" autoCapitalize="none" autoComplete="email" keyboardType="email-address" {...field('email')} />
+        <TextField label="Senha (mín. 8 caracteres)" secureTextEntry autoComplete="new-password" {...field('password')} />
 
-      <View style={styles.group}>
-        <Text style={styles.label}>Você é</Text>
-        <Chips options={roleOptions} value={role} onChange={setRole} />
-        {!!errors.role && <Text style={styles.error}>Escolha uma opção</Text>}
-      </View>
-
-      {needsCourse && (
         <View style={styles.group}>
-          <Text style={styles.label}>Curso</Text>
-          <Chips options={courseOptions} value={course} onChange={setCourse} />
+          <Text style={styles.label}>Você é</Text>
+          <Chips options={profileOptions} value={profile} onChange={setProfile} />
+          {!!errors.profile && <Text style={styles.error}>{errors.profile}</Text>}
         </View>
-      )}
 
-      <TextField label="Telefone (opcional)" keyboardType="phone-pad" autoComplete="tel" {...field('phone')} />
-      <TextField label="Sobre você (opcional)" multiline maxLength={280} style={styles.bio} {...field('bio')} />
+        {needsCourse && (
+          <View style={styles.group}>
+            <Text style={styles.label}>Curso</Text>
+            <Chips options={courseOptions} value={course} onChange={setCourse} />
+          </View>
+        )}
 
-      {/* LGPD: consentimento explícito. TODO: linkar termos de uso e política de privacidade reais. */}
-      <Pressable style={styles.terms} onPress={() => setAcceptedTerms((v) => !v)} accessibilityRole="checkbox">
-        <View style={[styles.checkbox, acceptedTerms && styles.checkboxOn]}>
-          {acceptedTerms && <Text style={styles.check}>✓</Text>}
-        </View>
-        <Text style={[font.caption, styles.termsText]}>
-          Li e aceito os termos de uso e a política de privacidade, incluindo o uso de imagem nas publicações.
-        </Text>
-      </Pressable>
-      {!!errors.acceptedTerms && <Text style={styles.error}>{errors.acceptedTerms}</Text>}
-      {!!errors.form && <Text style={styles.error}>{errors.form}</Text>}
+        <TextField label="Telefone (opcional)" keyboardType="phone-pad" autoComplete="tel" {...field('phone')} />
+        <TextField label="Sobre você (opcional)" multiline maxLength={280} style={styles.bio} {...field('bio')} />
 
-      <Button title="Criar conta" onPress={handleSubmit} loading={loading} />
-    </Screen>
+        <TermsCheckbox checked={acceptedTerms} onChange={setAcceptedTerms} error={errors.acceptedTerms} />
+        {!!errors.form && <Text style={styles.error}>{errors.form}</Text>}
+
+        <Button title="Criar conta" onPress={handleSubmit} loading={loading} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing.xs },
-  label: { ...font.caption, fontWeight: '600', color: colors.text },
+  flex: { flex: 1 },
+  content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
+  group: { gap: 6 },
+  label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
   bio: { minHeight: 80, textAlignVertical: 'top', paddingTop: spacing.md },
-  error: { color: colors.danger, fontSize: 13 },
-  terms: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-  termsText: { flex: 1 },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxOn: { backgroundColor: colors.primary },
-  check: { color: colors.primaryText, fontWeight: '800' },
+  error: { fontFamily: fonts.medium, color: colors.danger, fontSize: 13 },
 });

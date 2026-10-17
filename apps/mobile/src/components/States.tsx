@@ -1,5 +1,6 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { colors, font, spacing } from '@/theme';
+import { colors, font, spacing, type IconName } from '@/theme';
 import { Button } from './Button';
 
 export function Loading() {
@@ -13,20 +14,23 @@ export function Loading() {
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return (
     <View style={styles.center}>
-      <Text style={font.body}>{error instanceof Error ? error.message : 'Algo deu errado'}</Text>
-      {onRetry && <Button title="Tentar de novo" variant="outline" onPress={onRetry} />}
+      <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
+      <Text style={[font.bodyStrong, styles.text]}>{error instanceof Error ? error.message : 'Algo deu errado'}</Text>
+      {onRetry && <Button title="Tentar de novo" variant="soft" size="sm" onPress={onRetry} />}
     </View>
   );
 }
 
-export function Empty({ message }: { message: string }) {
+export function Empty({ message, icon = 'leaf-outline' }: { message: string; icon?: IconName }) {
   return (
     <View style={styles.center}>
-      <Text style={font.caption}>{message}</Text>
+      <Ionicons name={icon} size={36} color={colors.border} />
+      <Text style={[font.caption, styles.text]}>{message}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   center: { padding: spacing.xl, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  text: { textAlign: 'center' },
 });

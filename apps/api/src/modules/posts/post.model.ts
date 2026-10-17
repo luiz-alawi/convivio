@@ -1,4 +1,4 @@
-import { POST_KINDS, type Post, type PostKind } from '@convivio/shared';
+import { POST_KINDS, type Post, type PostKind, type ReportedPost } from '@convivio/shared';
 import { Schema, Types, model } from 'mongoose';
 
 // Pilar Alta moralidade: momentos de bons hábitos (BeReal) e galeria pessoal (Pinterest)
@@ -24,6 +24,9 @@ export const PostModel = model('Post', postSchema);
 /** Quantas denúncias escondem um post automaticamente até alguém da moderação revisar. */
 export const REPORTS_TO_HIDE = 3;
 
+/** Campos do autor que vêm junto com cada post (populate). */
+export const AUTHOR_FIELDS = 'name username avatarUrl';
+
 interface PopulatedPost {
   _id: Types.ObjectId;
   author: unknown;
@@ -36,10 +39,15 @@ interface PopulatedPost {
 }
 
 export function toPost(p: PopulatedPost, viewerId: string): Post {
-  const author = p.author as { _id: Types.ObjectId; name: string; avatarUrl?: string | null };
+  const author = p.author as { _id: Types.ObjectId; name: string; username?: string | null; avatarUrl?: string | null };
   return {
     id: p._id.toString(),
-    author: { id: author._id.toString(), name: author.name, avatarUrl: author.avatarUrl ?? undefined },
+    author: {
+      id: author._id.toString(),
+      name: author.name,
+      username: author.username ?? undefined,
+      avatarUrl: author.avatarUrl ?? undefined,
+    },
     kind: p.kind,
     imageUrl: p.imageUrl,
     caption: p.caption ?? undefined,
@@ -47,5 +55,16 @@ export function toPost(p: PopulatedPost, viewerId: string): Post {
     likedByMe: p.likes.some((id) => id.toString() === viewerId),
     createdAt: p.createdAt.toISOString(),
     expiresAt: p.expiresAt?.toISOString(),
+  };
+}
+
+export function toReportedPost(
+  p: PopulatedPost & { hidden: boolean; reports: { reason?: string | null }[] },
+  viewerId: string,
+): ReportedPost {
+  return {
+    ...toPost(p, viewerId),
+    hidden: p.hidden,
+    reports: p.reports.map((r) => ({ reason: r.reason ?? '' })),
   };
 }

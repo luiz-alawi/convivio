@@ -17,6 +17,6 @@ export async function videosRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/:id/watched', { onRequest: [app.authenticate] }, async (request) => {
     assertObjectId(request.params.id, 'Vídeo');
     if (!(await VideoModel.exists({ _id: request.params.id }))) throw notFound('Vídeo');
-    return { pointsAwarded: await awardPoints(request.user.sub, 'watch_video', request.params.id) };
+    return { pointsAwarded: await awardPoints(request.account!.id, 'watch_video', request.params.id) };
   });
 }

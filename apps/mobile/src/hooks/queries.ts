@@ -1,6 +1,13 @@
 // Um hook por recurso da API. As telas só chamam estes hooks.
 import type {
+  AdminStats,
+  AdminUpdateUserInput,
+  AdminUser,
+  AccountRole,
   CheckInResult,
+  CompanyStatus,
+  CreateJobInput,
+  ReportedPost,
   Course,
   CreatePostInput,
   Job,
@@ -24,7 +31,8 @@ const qs = (params: Record<string, string | undefined>) => {
 
 // --- usuário logado ---
 
-export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/auth/me') });
+export const useMe = ({ enabled = true }: { enabled?: boolean } = {}) =>
+  useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/auth/me'), enabled });
 
 export function useUpdateProfile() {
   const client = useQueryClient();
@@ -123,6 +131,66 @@ export function useToggleFollow() {
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['me'] });
       client.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+// --- empresa ---
+
+export const useMyJobs = () => useQuery({ queryKey: ['jobs', 'mine'], queryFn: () => api<Job[]>('/jobs/mine') });
+
+export function useCreateJob() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateJobInput) => api<Job>('/jobs', { method: 'POST', body: input }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['jobs'] }),
+  });
+}
+
+export function useDeleteJob() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/jobs/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['jobs'] });
+      client.invalidateQueries({ queryKey: ['admin'] });
+    },
+  });
+}
+
+// --- administração ---
+
+export const useAdminStats = () =>
+  useQuery({ queryKey: ['admin', 'stats'], queryFn: () => api<AdminStats>('/admin/stats') });
+
+export const useAdminUsers = (filters: { role?: AccountRole; companyStatus?: CompanyStatus; search?: string }) =>
+  useQuery({
+    queryKey: ['admin', 'users', filters],
+    queryFn: () => api<AdminUser[]>(`/admin/users${qs(filters)}`),
+  });
+
+export function useAdminUpdateUser() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: AdminUpdateUserInput & { id: string }) =>
+      api<AdminUser>(`/admin/users/${id}`, { method: 'PATCH', body: input }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['admin'] }),
+  });
+}
+
+export const useReportedPosts = () =>
+  useQuery({ queryKey: ['admin', 'reported-posts'], queryFn: () => api<ReportedPost[]>('/admin/reported-posts') });
+
+export function useModeratePost() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'esconder' | 'restaurar' | 'excluir' }) =>
+      action === 'excluir'
+        ? api(`/admin/posts/${id}`, { method: 'DELETE' })
+        : api(`/admin/posts/${id}`, { method: 'PATCH', body: { hidden: action === 'esconder' } }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['admin'] });
+      client.invalidateQueries({ queryKey: ['posts'] });
     },
   });
 }

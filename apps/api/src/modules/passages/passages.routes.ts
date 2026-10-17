@@ -24,6 +24,6 @@ export async function passagesRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/:id/read', { onRequest: [app.authenticate] }, async (request) => {
     assertObjectId(request.params.id, 'Passagem');
     if (!(await PassageModel.exists({ _id: request.params.id }))) throw notFound('Passagem');
-    return { pointsAwarded: await awardPoints(request.user.sub, 'read_passage', request.params.id) };
+    return { pointsAwarded: await awardPoints(request.account!.id, 'read_passage', request.params.id) };
   });
 }

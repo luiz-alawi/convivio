@@ -1,18 +1,16 @@
 import { JOB_TYPES, type Job } from '@convivio/shared';
 import { Schema, Types, model, type InferSchemaType } from 'mongoose';
 
-// Pilar Trabalho: vagas e freelas de empresas da região
+// Pilar Trabalho: vagas e freelas publicados por empresas aprovadas
 const jobSchema = new Schema(
   {
     title: { type: String, required: true },
-    company: { type: String, required: true },
+    company: { type: String, required: true }, // nome exibido (copiado da conta da empresa)
     type: { type: String, enum: JOB_TYPES, required: true },
     description: { type: String, required: true },
     contact: { type: String, required: true },
     city: String,
     createdBy: { type: Types.ObjectId, ref: 'User' },
-    // Só vagas aprovadas aparecem no app (evita spam e golpes)
-    status: { type: String, enum: ['pendente', 'aprovada', 'recusada'], default: 'pendente' },
   },
   { timestamps: true },
 );

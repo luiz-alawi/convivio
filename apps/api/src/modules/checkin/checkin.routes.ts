@@ -9,7 +9,7 @@ const dayKey = (date: Date) => date.toLocaleDateString('sv-SE', { timeZone: 'Ame
 
 export async function checkinRoutes(app: FastifyInstance) {
   app.post('/', { onRequest: [app.authenticate] }, async (request): Promise<CheckInResult> => {
-    const user = await User.findById(request.user.sub);
+    const user = await User.findById(request.account!.id);
     if (!user) throw notFound('Usuário');
 
     const now = new Date();
