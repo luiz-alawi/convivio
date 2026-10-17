@@ -1,3 +1,4 @@
+export * from './AnimatedBrand';
 export * from './AppHeader';
 export * from './Avatar';
 export * from './Badge';
