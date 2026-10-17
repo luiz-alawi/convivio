@@ -9,6 +9,7 @@
   "scripts": {
     "dev:api": "npm run dev -w @convivio/api",
     "dev:mobile": "npm run start -w @convivio/mobile",
+    "seed": "npm run seed -w @convivio/api",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "overrides": {
