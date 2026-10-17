@@ -1,4 +1,5 @@
 import type { UploadKind, UploadSignature } from '@convivio/shared';
+import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { api, ApiError } from './api';
 
@@ -21,8 +22,8 @@ export async function pickAndUploadImage(kind: UploadKind): Promise<string | nul
 
   const sig = await api<UploadSignature>(`/uploads/signature?kind=${kind}`);
   const form = new FormData();
-  // React Native aceita { uri, name, type } como arquivo no FormData
-  form.append('file', { uri: asset.uri, name: asset.fileName ?? 'foto.jpg', type: asset.mimeType ?? 'image/jpeg' } as never);
+  // O fetch do Expo (SDK 54+) não aceita o antigo { uri, name, type }: o arquivo precisa ser um File do expo-file-system
+  form.append('file', new File(asset.uri));
   form.append('api_key', sig.apiKey);
   form.append('timestamp', String(sig.timestamp));
   form.append('folder', sig.folder);
