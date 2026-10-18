@@ -4,38 +4,42 @@ import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, pillarTheme, shadow, spacing } from '@/theme';
+import { colors, fonts, pillarTheme, shadow, spacing, type IconName } from '@/theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
-/** Barra inferior com os cinco pilares. No Início nenhum pilar fica selecionado. */
+/** Barra inferior: Início + os cinco pilares. */
 export function PillarTabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const current = state.routes[state.index]?.name;
 
+  const tabs = [
+    { route: 'index', label: 'Início', icon: 'home' as IconName, color: colors.primary },
+    ...PILLAR_IDS.map((id: PillarId) => ({ route: id, label: pillarTheme[id].short, icon: pillarTheme[id].icon, color: pillarTheme[id].color })),
+  ];
+
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
-      {PILLAR_IDS.map((id: PillarId) => {
-        const theme = pillarTheme[id];
-        const focused = current === id;
+      {tabs.map(({ route, label, icon, color }) => {
+        const focused = current === route;
         return (
           <Pressable
-            key={id}
+            key={route}
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
-            accessibilityLabel={theme.short}
-            onPress={() => navigation.navigate(id)}
+            accessibilityLabel={label}
+            onPress={() => navigation.navigate(route)}
             style={styles.item}
           >
-            <View style={[styles.iconWrap, focused && { backgroundColor: theme.color }]}>
+            <View style={[styles.iconWrap, focused && { backgroundColor: color }]}>
               <Ionicons
-                name={focused ? theme.icon : (`${theme.icon}-outline` as typeof theme.icon)}
+                name={focused ? icon : (`${icon}-outline` as IconName)}
                 size={22}
-                color={focused ? colors.primaryText : theme.color}
+                color={focused ? colors.primaryText : color}
               />
             </View>
-            <Text style={[styles.label, { color: focused ? theme.color : colors.textMuted }]} numberOfLines={1}>
-              {theme.short}
+            <Text style={[styles.label, { color: focused ? color : colors.textMuted }]} numberOfLines={1}>
+              {label}
             </Text>
           </Pressable>
         );
@@ -55,6 +59,6 @@ const styles = StyleSheet.create({
     ...shadow.raised,
   },
   item: { flex: 1, alignItems: 'center', gap: 4 },
-  iconWrap: { width: 46, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  iconWrap: { width: 42, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   label: { fontFamily: fonts.bold, fontSize: 11 },
 });

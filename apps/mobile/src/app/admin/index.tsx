@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, ErrorState, Loading } from '@/components';
+import { ErrorState, Loading } from '@/components';
 import { useAdminStats } from '@/hooks/queries';
 import { brandGradient, colors, font, fonts, pillarTheme, radius, shadow, spacing, type IconName } from '@/theme';
 
@@ -39,7 +39,6 @@ export default function AdminHome() {
       <Text style={font.caption}>
         TODO: cadastro de lugares, viagens, videoaulas e passagens pelo app (hoje é pelo seed da API).
       </Text>
-      <Button title="Voltar ao app" icon="arrow-back" variant="soft" onPress={() => router.navigate('/')} />
     </ScrollView>
   );
 }

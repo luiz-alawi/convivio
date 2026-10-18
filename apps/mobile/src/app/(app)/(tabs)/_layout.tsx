@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { AppHeader, PillarTabBar } from '@/components';
 import { colors } from '@/theme';
 
-// Barra de baixo = os cinco pilares. O Início (index) não aparece na barra: abre pelo logo no topo.
+// Barra de baixo = Início + os cinco pilares. O logo no topo também volta ao Início.
 export default function TabsLayout() {
   return (
     <Tabs

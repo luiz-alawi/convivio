@@ -1,13 +1,13 @@
-import { router, type Href } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMe } from '@/hooks/queries';
 import { colors, fonts, spacing } from '@/theme';
 import { Avatar } from './Avatar';
-import { IconButton } from './IconButton';
 import { PillarFlower } from './PillarFlower';
 
-/** Topo fixo do app: logo (volta ao Início), Explorar, painel admin (se admin) e avatar (perfil). */
+/** Topo fixo do app: logo (volta ao Início), Explorar e avatar (perfil). O painel admin abre pelo perfil. */
 export function AppHeader() {
   const insets = useSafeAreaInsets();
   const me = useMe();
@@ -18,22 +18,16 @@ export function AppHeader() {
         <Text style={styles.logo}>convivio</Text>
       </Pressable>
       <View style={styles.actions}>
-        {me.data?.role === 'admin' && (
-          <IconButton
-            icon="shield-checkmark"
-            label="Painel do administrador"
-            color={colors.primary}
-            background={colors.primarySoft}
-            onPress={() => router.push('/admin' as Href)}
-          />
-        )}
-        <IconButton
-          icon="compass"
-          label="Explorar a região"
-          color={colors.primary}
-          background={colors.primarySoft}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Explorar a região"
           onPress={() => router.push('/explorar')}
-        />
+          hitSlop={6}
+          style={({ pressed }) => [styles.explore, pressed && { opacity: 0.7 }]}
+        >
+          <Ionicons name="compass" size={18} color={colors.primary} />
+          <Text style={styles.exploreText}>Explorar</Text>
+        </Pressable>
         <Pressable onPress={() => router.push('/perfil')} accessibilityLabel="Meu perfil" hitSlop={6}>
           <Avatar name={me.data?.name ?? '?'} uri={me.data?.avatarUrl} size={40} />
         </Pressable>
@@ -54,4 +48,14 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   logo: { fontFamily: fonts.extrabold, fontSize: 22, letterSpacing: -0.8, color: colors.text },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  explore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 40,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: colors.primarySoft,
+  },
+  exploreText: { fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
 });
