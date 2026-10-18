@@ -16,12 +16,12 @@ export const fonts = {
 };
 
 export const colors = {
-  background: '#F6F5FB',
+  background: '#EDE9F8',
   surface: '#FFFFFF',
-  surfaceAlt: '#EFEDF7',
+  surfaceAlt: '#E5DFF4',
   text: '#17131F',
   textMuted: '#6C6679',
-  border: '#E6E2EF',
+  border: '#DAD3EC',
   primary: '#6D28D9',
   primarySoft: '#EDE6FC',
   primaryText: '#FFFFFF',
