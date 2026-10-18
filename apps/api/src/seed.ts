@@ -131,11 +131,11 @@ const jobs = [
 // Não inventar citações: usar trechos reais escolhidos pela equipe, com autorização.
 const passages = [
   {
-    text: 'Trecho de exemplo 1 — substituir por uma passagem escolhida pela equipe.',
-    book: { title: 'Título do livro [confirmar]', author: 'Antonio Meneghetti', purchaseUrl: undefined },
+    text: "O líder é um pouco como um falcão do céu. Começa no lugar onde masce. No início não pode mudar muitas coisas, mas logo após creste e, quando sente as asas, já aprende as estratégias do voo e vai procurar o seu território.",
+    book: { title: 'Aprendiz Líder', author: 'Antonio Meneghetti', purchaseUrl: undefined },
   },
   {
-    text: 'Trecho de exemplo 2 — substituir por uma passagem escolhida pela equipe.',
+    text: "A mudança não será na força, será no prazer",
     book: { title: 'Título do livro [confirmar]', author: 'Antonio Meneghetti', purchaseUrl: undefined },
   },
 ];
